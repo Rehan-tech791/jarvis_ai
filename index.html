@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ULTRON AI</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: radial-gradient(circle, #241013, #08090d 65%);
+  color: #f4f4f5; font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+h1 { letter-spacing: 8px; margin-bottom: 4px; }
+p { color: #a1a1aa; font-size: 13px; }
+.gyro {
+  width: 260px; height: 260px; position: relative;
+  display: grid; place-items: center;
+  perspective: 700px; margin: 35px 0;
+}
+.ring {
+  position: absolute; width: 220px; height: 220px;
+  border: 5px solid #656873; border-radius: 50%;
+  box-shadow: 0 0 12px #5557, inset 0 0 12px #5555;
+}
+.r1 { transform: rotateX(65deg); animation: spin 5s linear infinite; }
+.r2 { transform: rotateY(65deg); animation: spin 7s linear infinite reverse; }
+.r3 { width: 185px; height: 185px;
+      border-color: #9ca3af; animation: spin 9s linear infinite; }
+.core {
+  width: 70px; height: 70px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #ff7777 12%, #ef2020 35%, #710000 75%);
+  box-shadow: 0 0 18px #ff2020, 0 0 55px #ed171788;
+  animation: pulse 2s ease-in-out infinite;
+}
+body.active .core {
+  box-shadow: 0 0 30px #ff2929, 0 0 90px #ff1010;
+  animation-duration: .45s;
+}
+body.active .ring { border-color: #ef7777; }
+@keyframes spin { to { rotate: 360deg; } }
+@keyframes pulse {
+  50% { scale: 1.13; }
+}
+button {
+  border: 1px solid #ef4444; border-radius: 30px;
+  padding: 14px 28px; background: #a10f19;
+  color: white; font-size: 15px; cursor: pointer;
+}
+button:active { transform: scale(.97); }
+#status { color: #ff7777; margin-top: 18px; }
+small { color: #71717a; margin-top: 35px; }
+</style>
+</head>
+<body>
+<h1>ULTRON</h1>
+<p>PERSONAL AI SYSTEM</p>
+
+<div class="gyro">
+  <div class="ring r1"></div>
+  <div class="ring r2"></div>
+  <div class="ring r3"></div>
+  <div class="core"></div>
+</div>
+
+<button id="toggle">ACTIVATE CORE</button>
+<div id="status">SYSTEM STANDBY</div>
+<small>CRIMSON CORE · PROTOTYPE 01</small>
+
+<script>
+const button = document.getElementById("toggle");
+const status = document.getElementById("status");
+
+button.addEventListener("click", () => {
+  const active = document.body.classList.toggle("active");
+  button.textContent = active ? "DEACTIVATE CORE" : "ACTIVATE CORE";
+  status.textContent = active
+    ? "CORE ACTIVE · SIMULATED VOICE RESPONSE"
+    : "SYSTEM STANDBY";
+});
+</script>
+</body>
+</html>
