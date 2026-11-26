@@ -1,0 +1,272 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#09090d">
+<title>ULTRON AI</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;padding:20px;
+ background:radial-gradient(circle at top,#351116,#09090d 65%);
+ color:#f4f4f5;font-family:Arial,sans-serif;
+}
+header{text-align:center;padding:15px}
+h1{letter-spacing:10px;color:white;text-shadow:0 0 22px red}
+header p,.hint{color:#999;font-size:12px}
+main{max-width:850px;margin:auto;display:grid;gap:18px}
+.panel{
+ background:#111116;border:1px solid #57242b;
+ border-radius:18px;padding:20px;
+ box-shadow:0 10px 35px #0008;
+}
+.core-panel{text-align:center}
+.gyro{
+ width:190px;height:190px;margin:10px auto 25px;
+ position:relative;display:grid;place-items:center;
+ perspective:700px;
+}
+.ring{
+ position:absolute;width:160px;height:160px;
+ border:4px solid #85858d;border-radius:50%;
+ box-shadow:0 0 15px #7777;
+}
+.r1{transform:rotateX(65deg);animation:spin 5s linear infinite}
+.r2{transform:rotateY(65deg);animation:spin 7s linear infinite reverse}
+.r3{width:130px;height:130px;animation:spin 9s linear infinite}
+.core{
+ width:55px;height:55px;border-radius:50%;
+ background:radial-gradient(circle at 35% 30%,white,#ff7777 15%,red 40%,#500 80%);
+ box-shadow:0 0 25px red,0 0 65px #f002;
+ animation:pulse 2s infinite;
+}
+body.active .core{box-shadow:0 0 35px red,0 0 100px red;animation-duration:.4s}
+body.active .ring{border-color:#ff7777}
+@keyframes spin{to{rotate:360deg}}
+@keyframes pulse{50%{scale:1.15}}
+button{
+ border:1px solid #ef4444;border-radius:25px;
+ padding:12px 19px;background:#a10f19;
+ color:white;font-weight:bold;cursor:pointer;
+}
+button.secondary{background:#222;border-color:#733}
+button:disabled{opacity:.5}
+#status{color:#ff7777;font-size:12px;margin:15px}
+.section-title{color:#ff858b;letter-spacing:3px;font-size:13px}
+#messages{
+ height:280px;overflow-y:auto;display:flex;
+ flex-direction:column;gap:10px;padding:8px 0;
+}
+.msg{
+ max-width:88%;padding:12px;border-radius:12px;
+ font-size:14px;line-height:1.5;white-space:pre-wrap;
+ overflow-wrap:anywhere;
+}
+.user{align-self:flex-end;background:#67151e}
+.assistant{align-self:flex-start;background:#24242b}
+.composer{display:flex;gap:8px}
+input{
+ min-width:0;flex:1;background:#09090d;
+ border:1px solid #555;border-radius:10px;
+ padding:12px;color:white;
+}
+input:focus{outline:1px solid red}
+.hint{line-height:1.5}
+details summary{cursor:pointer;color:#ff858b}
+.settings-row{display:flex;gap:8px;margin-top:12px}
+footer{text-align:center;color:#777;font-size:10px;padding:25px}
+@media(min-width:700px){
+ main{grid-template-columns:.8fr 1.2fr}
+ .settings{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<header>
+ <h1>ULTRON</h1>
+ <p>PERSONAL ARTIFICIAL INTELLIGENCE SYSTEM</p>
+</header>
+
+<main>
+<section class="panel core-panel">
+ <div class="gyro">
+  <div class="ring r1"></div>
+  <div class="ring r2"></div>
+  <div class="ring r3"></div>
+  <div class="core"></div>
+ </div>
+ <div id="status">SYSTEM STANDBY</div>
+ <button id="toggle">ACTIVATE CORE</button>
+ <button class="secondary" id="voiceToggle">VOICE: ON</button>
+ <p class="hint">ULTRON CORE INTERFACE</p>
+</section>
+
+<section class="panel">
+ <h2 class="section-title">COMMUNICATION LINK</h2>
+ <div id="messages" aria-live="polite">
+  <div class="msg assistant">
+   ULTRON interface initialized.
+   Awaiting your command, Creator.
+  </div>
+ </div>
+ <div class="composer">
+  <input id="prompt" placeholder="Transmit a message..." aria-label="Message">
+  <button id="send">SEND</button>
+  <button id="mic">MIC</button>
+ </div>
+ <p class="hint" id="connection">MODE: LOCAL DEMO · AI NOT CONNECTED</p>
+</section>
+
+<section class="panel settings">
+ <details>
+  <summary>SYSTEM SETTINGS · BACKEND</summary>
+  <p class="hint">
+   Connect your own secure AI backend. It must accept POST /chat
+   with a messages array and return JSON containing a reply string.
+   Never put private API keys in this website.
+  </p>
+  <div class="settings-row">
+   <input id="endpoint" type="url" placeholder="Backend URL">
+   <button id="save">SAVE</button>
+  </div>
+  <p class="hint" id="settingsStatus">No backend configured.</p>
+ </details>
+</section>
+</main>
+
+<footer>ULTRON · CRIMSON CORE · PROTOTYPE 02</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+let active=false,voiceOn=true,history=[];
+
+const saved=localStorage.getItem("ultron_backend_url")||"";
+$("endpoint").value=saved;
+
+function status(text){$("status").textContent=text;}
+
+function addMessage(role,text){
+ const el=document.createElement("div");
+ el.className="msg "+role;
+ el.textContent=text;
+ $("messages").appendChild(el);
+ $("messages").scrollTop=$("messages").scrollHeight;
+}
+
+function speak(text){
+ if(!voiceOn||!("speechSynthesis" in window))return;
+ speechSynthesis.cancel();
+ const utterance=new SpeechSynthesisUtterance(text);
+ utterance.rate=1;
+ utterance.pitch=.85;
+ speechSynthesis.speak(utterance);
+}
+
+$("toggle").onclick=()=>{
+ active=!active;
+ document.body.classList.toggle("active",active);
+ $("toggle").textContent=active?"DEACTIVATE CORE":"ACTIVATE CORE";
+ status(active?"CORE ACTIVE · SYSTEM ONLINE":"SYSTEM STANDBY");
+};
+
+$("voiceToggle").onclick=()=>{
+ voiceOn=!voiceOn;
+ $("voiceToggle").textContent="VOICE: "+(voiceOn?"ON":"OFF");
+ if(!voiceOn&&"speechSynthesis" in window)speechSynthesis.cancel();
+};
+
+$("save").onclick=()=>{
+ const value=$("endpoint").value.trim().replace(/\/$/,"");
+ if(value&&!/^https?:\/\//i.test(value)){
+  $("settingsStatus").textContent="Please enter a valid URL.";
+  return;
+ }
+ localStorage.setItem("ultron_backend_url",value);
+ $("settingsStatus").textContent=value?"Backend URL saved.":"Backend URL cleared.";
+ $("connection").textContent=value?
+  "MODE: BACKEND CONFIGURED":"MODE: LOCAL DEMO · AI NOT CONNECTED";
+};
+
+async function sendMessage(text){
+ text=text.trim();
+ if(!text)return;
+
+ addMessage("user",text);
+ $("prompt").value="";
+ history.push({role:"user",content:text});
+ $("send").disabled=true;
+ status("PROCESSING COMMAND...");
+
+ try{
+  const endpoint=localStorage.getItem("ultron_backend_url");
+
+  if(!endpoint){
+   const reply="Message received, Creator. My chat interface is working, but my real AI brain has not been connected yet.";
+   addMessage("assistant",reply);
+   history.push({role:"assistant",content:reply});
+   speak(reply);
+   return;
+  }
+
+  const response=await fetch(endpoint+"/chat",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({messages:history})
+  });
+
+  if(!response.ok)throw new Error("Server error: "+response.status);
+
+  const data=await response.json();
+  if(typeof data.reply!=="string")throw new Error("Invalid server response.");
+
+  addMessage("assistant",data.reply);
+  history.push({role:"assistant",content:data.reply});
+  speak(data.reply);
+
+ }catch(error){
+  addMessage("assistant","Connection error: "+error.message);
+ }finally{
+  $("send").disabled=false;
+  status(active?"CORE ACTIVE · SYSTEM ONLINE":"SYSTEM STANDBY");
+ }
+}
+
+$("send").onclick=()=>sendMessage($("prompt").value);
+
+$("prompt").addEventListener("keydown",event=>{
+ if(event.key==="Enter")sendMessage($("prompt").value);
+});
+
+const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+
+if(Recognition){
+ const recognition=new Recognition();
+ recognition.lang="en-IN";
+ recognition.interimResults=false;
+
+ $("mic").onclick=()=>{
+  try{
+   recognition.start();
+   status("LISTENING...");
+  }catch(error){
+   status("MICROPHONE BUSY");
+  }
+ };
+
+ recognition.onresult=event=>{
+  $("prompt").value=event.results[0][0].transcript;
+  sendMessage($("prompt").value);
+ };
+
+ recognition.onerror=event=>{
+  status("VOICE INPUT: "+event.error.toUpperCase());
+ };
+}else{
+ $("mic").disabled=true;
+ $("mic").title="Speech recognition unavailable in this browser.";
+}
+</script>
+</body>
+</html>
