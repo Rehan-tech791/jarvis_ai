@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "recursive/flint-v1.0",
+          model: "nvidia/nemotron-3.5-lightning-free",
           messages: [
             {
               role: "system",
